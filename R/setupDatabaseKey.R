@@ -18,6 +18,7 @@ setupDatabaseKey <- function(key,
                              cdmSchema,
                              resultsSchema,
                              achillesSchema = resultsSchema,
+                             cdmName = NULL,
                              overwrite = FALSE,
                              check = TRUE) {
   # input check
@@ -26,5 +27,33 @@ setupDatabaseKey <- function(key,
   omopgenerics::assertChoice(dbms, names(dbmsConfig), length = 1)
   omopgenerics::assertLogical(check, length = 1)
 
+  # create config object
+
+  if (check) {
+    cli::cli_inform(c(i = "Checking that credentials are correct."))
+    # check that cdm can be created from config information
+    validateConfigCredentials(config)
+    cli::cli_inform(c(v = "Credentials are good."))
+  }
+
+  # write config
+  writeKey(key, config)
+  cli::cli_inform(c(v = "{.var {key}} written in the environment."))
+
+  invisible(key)
 }
 
+validateConfigCredentials <- function(config, call = parent.frame()) {
+  wp <- sample(letters, 3) |>
+    paste0(collapse = "") |>
+    paste0("_")
+
+  cdm <- tryCatch({
+    cdmFromConfig(config, writePrefix = wp)
+  }, error = function(e) as.character(e))
+  if (is.character(cdm)) {
+    cli::cli_abort(c(x = "cdm_reference could not be created", "!" = cdm), call = call)
+  }
+
+  invisible()
+}
