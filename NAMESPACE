@@ -2,3 +2,4 @@
 export(cdmFromKey)
 export(databaseConfig)
 export(setupDatabaseKey)
+S3method(print,database_config)
