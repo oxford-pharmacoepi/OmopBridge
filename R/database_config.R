@@ -11,15 +11,17 @@ databaseConfig <- function(key,
                            showPassword = TRUE) {
   # input check
   key <- validateKey(key, setup = FALSE)
-  fields <- c("DRIVER", "SERVER", "DATABASE", "UID", "PWD")
-  values <- Sys.getenv(paste0(envPrefix(key), fields), unset = "")
-  names(values) <- tolower(fields)
-  missing_fields <- names(values)[!nzchar(values)]
-  if (length(missing_fields)) {
-    rlang::abort(paste0("Missing configuration for '", key, "': ", paste(missing_fields, collapse = ", "), "."))
-  }
-  if (!showPassword) values["pwd"] <- "<hidden>"
-  as.list(values)
+
+  prefix <- envPrefix(key)
+
+  # fields
+  fields <- as.list(Sys.getenv())
+  fields <- fields[stringr::str_starts(names(fields), prefix)]
+  names(fields) <- stringr::str_remove(string = names(fields), pattern = paste0("^", prefix))
+
+  if (!showPassword) fields["pwd"] <- "<hidden>"
+
+  fields
 }
 
 envPrefix <- function(key) {

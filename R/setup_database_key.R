@@ -36,7 +36,10 @@ validateKey <- function(key, setup, overwrite, call = parent.frame()) {
   if (setup) {
     if (key %in% ak) {
       if (overwrite) {
-        # delete existing key
+        # Delete the existing key from the current R session. Its entries in
+        # the .Renviron file are replaced below when the new values are saved.
+        fields <- c("DRIVER", "SERVER", "DATABASE", "UID", "PWD")
+        Sys.unsetenv(paste0(envPrefix(key), fields))
         return(key)
       } else {
         cli::cli_abort(c(x = "`key` already exists and overwrite is FALSE."))
@@ -55,10 +58,8 @@ validateKey <- function(key, setup, overwrite, call = parent.frame()) {
 
 availableKeys <- function() {
   envNames <- names(Sys.getenv())
-  prefix <- "^OMOPBRIDGE_([A-Z][A-Z0-9_]*)_(DRIVER|SERVER|DATABASE|UID|PWD)$"
+  prefix <- "^OMOPBRIDGE_([A-Z][A-Z0-9_]*)_DBMS$"
   keys <- sub(prefix, "\\1", envNames[grepl(prefix, envNames)])
   keys <- unique(keys)
   tolower(keys)
 }
-
-env_quote <- function(x) paste0("'", gsub("'", "'\"'\"'", x, fixed = TRUE), "'")
