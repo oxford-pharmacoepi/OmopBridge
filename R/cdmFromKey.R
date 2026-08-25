@@ -9,6 +9,12 @@
 #'
 cdmFromKey <- function(key,
                        writePrefix = paste0(paste0(sample(letters, 3), collapse = ""), "_")) {
+  # input check
+  omopgenerics::assertCharacter(writePrefix, length = 1)
+
+  config <- databaseConfig(key, showPassword = TRUE)
+
+  cdmFromConfig(config, writePrefix = writePrefix)
 }
 
 conFromConfig <- function(config) {

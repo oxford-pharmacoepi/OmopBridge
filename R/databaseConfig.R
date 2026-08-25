@@ -10,19 +10,28 @@
 #'
 databaseConfig <- function(key,
                            showPassword = FALSE) {
-  if (!is.logical(showPassword) || length(showPassword) != 1L || is.na(showPassword)) {
-    rlang::abort("showPassword must be a single TRUE or FALSE value.")
-  }
+  # input check
   key <- validateKey(key, setup = FALSE)
+  omopgenerics::assertLogical(showPassword, length = 1)
 
-  prefix <- keyPrefix(key)
+  config <- readConfig(key)
 
-  fields <- Sys.getenv()
-  fields <- fields[startsWith(names(fields), prefix)]
-  names(fields) <- tolower(sub(paste0("^", prefix), "", names(fields)))
-  fields <- as.list(fields)
-  if (!showPassword && "pwd" %in% names(fields)) fields$pwd <- "<hidden>"
-  fields
+  # obscure password
+  if (!showPassword) {
+    pwdKeys <- c("pwd", "password")
+    config <- config[!names(config) %in% pwdKeys]
+  }
+
+  return(config)
+}
+
+readConfig <- function(key) {
+  kp <- keyPrefix(key)
+  values <- as.list(Sys.getenv())
+  values <- values[startsWith(names(values), kp)]
+  names(values) <- stringr::str_remove(names(values), paste0("^", kp))
+  names(values) <- stringr::str_to_lower(names(values))
+  newDatabaseConfig(values)
 }
 
 newDatabaseConfig <- function(config) {
