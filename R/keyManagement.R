@@ -42,6 +42,7 @@ validateKey <- function(key, setup, overwrite, call = parent.frame()) {
 }
 
 writeKey <- function(key, config) {
+  removeKey(key)
 
   file <- envFile()
   old <- readLines(file, warn = FALSE)

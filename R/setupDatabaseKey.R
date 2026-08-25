@@ -18,11 +18,13 @@ setupDatabaseKey <- function(key,
                              cdmSchema,
                              resultsSchema,
                              achillesSchema = resultsSchema,
-                             overwrite = FALSE) {
+                             overwrite = FALSE,
+                             check = TRUE) {
   # input check
   omopgenerics::assertLogical(overwrite, length = 1)
   key <- validateKey(key, setup = TRUE, overwrite = overwrite)
   omopgenerics::assertChoice(dbms, names(dbmsConfig), length = 1)
+  omopgenerics::assertLogical(check, length = 1)
 
 }
 

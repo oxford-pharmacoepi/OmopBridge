@@ -24,3 +24,12 @@ databaseConfig <- function(key,
   if (!showPassword && "pwd" %in% names(fields)) fields$pwd <- "<hidden>"
   fields
 }
+
+newDatabaseConfig <- function(config) {
+  structure(.Data = config, class = c("database_config", "list"))
+}
+
+#' @export
+print.database_config <- function(x, ...) {
+
+}
