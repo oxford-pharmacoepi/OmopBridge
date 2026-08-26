@@ -20,7 +20,8 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/oxford-pharmacoepi/OmopBridge/graph/badge.svg)](https://app.codecov.io/gh/oxford-pharmacoepi/OmopBridge)
 <!-- badges: end -->
 
-The goal of OmopBridge is to ...
+OmopBridge lets you save named database configurations in a user-level
+`.Renviron` file and create an OMOP CDM connection from a key.
 
 ## Installation
 
@@ -33,25 +34,53 @@ pak::pak("oxford-pharmacoepi/OmopBridge")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Set up a PostgreSQL configuration once. The password is prompted for when it
+is omitted and is not printed by the package.
 
-```{r example}
+```{r setup, eval = FALSE}
 library(OmopBridge)
-## basic example code
+
+setupDatabaseKey(
+  key = "postgres_omop",
+  dbms = "postgres",
+  server = "localhost",
+  database = "omop",
+  uid = "my-user",
+  cdmSchema = "cdm",
+  resultsSchema = "results",
+  achillesSchema = "achilles"
+)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+Create the CDM reference whenever it is needed:
 
-```{r cars}
-summary(cars)
+```{r connect, eval = FALSE}
+cdm <- cdmFromKey("postgres_omop")
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+Configurations can be inspected without exposing the password:
 
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r inspect, eval = FALSE}
+databaseConfig("postgres_omop")
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+For SQL Server, provide an explicit catalog for each schema:
+
+```{r sql-server, eval = FALSE}
+setupDatabaseKey(
+  key = "sql_server_omop",
+  dbms = "sql server",
+  server = "sql-server",
+  database = "connection_database",
+  uid = "my-user",
+  cdmCatalog = "omop",
+  cdmSchema = "dbo",
+  resultsCatalog = "results",
+  resultsSchema = "dbo",
+  achillesCatalog = "results",
+  achillesSchema = "achilles"
+)
+```
+
+The `.Renviron` file contains credentials and should never be committed to
+version control.

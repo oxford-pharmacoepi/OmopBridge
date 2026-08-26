@@ -64,12 +64,11 @@ removeKey <- function(key) {
 
   if (!file.exists(file)) {
     writeLines(character(), con = file)
-    return(invisible(file))
+  } else {
+    old <- readLines(file, warn = FALSE)
+    isKeyLine <- startsWith(trimws(old), keyPrefixValue)
+    writeLines(old[!isKeyLine], file)
   }
-
-  old <- readLines(file, warn = FALSE)
-  isKeyLine <- startsWith(trimws(old), keyPrefixValue)
-  writeLines(old[!isKeyLine], file)
 
   sessionNames <- names(Sys.getenv())
   sessionKeyNames <- sessionNames[startsWith(sessionNames, keyPrefixValue)]

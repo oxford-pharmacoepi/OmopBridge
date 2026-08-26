@@ -15,11 +15,12 @@ databaseConfig <- function(key,
   omopgenerics::assertLogical(showPassword, length = 1)
 
   config <- readConfig(key)
+  config <- validateDatabaseConfig(config, checkCredentials = FALSE)
 
   # obscure password
   if (!showPassword) {
     pwdKeys <- c("pwd", "password")
-    config <- config[!names(config) %in% pwdKeys]
+    config <- newDatabaseConfig(config[!names(config) %in% pwdKeys])
   }
 
   return(config)
@@ -67,6 +68,11 @@ validateDatabaseConfig <- function(config, checkCredentials = TRUE) {
     rlang::abort("`config$dbms` is not a supported database management system.")
   }
   required <- dbmsConfig[[config$dbms]]$required
+  allowed <- unique(c(required, dbmsConfig[[config$dbms]]$connection))
+  unknown <- setdiff(names(config), allowed)
+  if (length(unknown)) {
+    rlang::abort(paste0("Unknown configuration field(s): ", paste(unknown, collapse = ", "), "."))
+  }
   missing <- required[purrr::map_lgl(required, function(x) {
     is.null(config[[x]]) || length(config[[x]]) != 1L ||
       is.na(config[[x]]) || !nzchar(as.character(config[[x]]))

@@ -12,9 +12,16 @@ cdmFromKey <- function(key, writePrefix = "omopbridge_") {
 
 conFromConfig <- function(config) {
   config <- validateDatabaseConfig(config, checkCredentials = FALSE)
+  connectionArgs <- connectionArguments(config)
+  do.call(DBI::dbConnect, connectionArgs)
+}
+
+connectionArguments <- function(config, drv = NULL) {
+  config <- validateDatabaseConfig(config, checkCredentials = FALSE)
   if (config$dbms == "postgres") {
+    if (is.null(drv)) drv <- RPostgres::Postgres()
     connectionArgs <- list(
-      drv = RPostgres::Postgres(),
+      drv = drv,
       host = config$server,
       port = as.integer(config$port),
       dbname = config$database,
@@ -22,11 +29,12 @@ conFromConfig <- function(config) {
       password = config$pwd
     )
     if (!is.null(config$sslmode)) connectionArgs$sslmode <- config$sslmode
-    return(do.call(DBI::dbConnect, connectionArgs))
+    return(connectionArgs)
   }
 
+  if (is.null(drv)) drv <- odbc::odbc()
   connectionArgs <- list(
-    drv = odbc::odbc(),
+    drv = drv,
     Driver = config$driver,
     Server = config$server,
     Database = config$database,
@@ -34,7 +42,7 @@ conFromConfig <- function(config) {
     PWD = config$pwd
   )
   if (!is.null(config$port)) connectionArgs$Port <- as.integer(config$port)
-  do.call(DBI::dbConnect, connectionArgs)
+  connectionArgs
 }
 
 cdmFromConfig <- function(config, writePrefix) {

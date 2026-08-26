@@ -68,11 +68,7 @@ setupDatabaseKey <- function(key,
 }
 
 databaseConnectionConfig <- function(dbms, config) {
-  allowed <- switch(
-    dbms,
-    postgres = c("server", "port", "database", "uid", "pwd", "sslmode"),
-    `sql server` = c("driver", "server", "port", "database", "uid", "pwd")
-  )
+  allowed <- dbmsConfig[[dbms]]$connection
   names(config) <- tolower(names(config))
   if (anyDuplicated(names(config))) {
     cli::cli_abort("Connection arguments cannot contain duplicate names.")
@@ -86,11 +82,14 @@ databaseConnectionConfig <- function(dbms, config) {
   }
   if (is.null(config$pwd)) {
     if (!interactive()) cli::cli_abort("`pwd` must be supplied in a non-interactive session.")
-    config$pwd <- utils::askPassword("Database password: ")
+    if (!requireNamespace("getPass", quietly = TRUE)) {
+      cli::cli_abort("Package `getPass` is required to prompt for a password.")
+    }
+    config$pwd <- getPass::getPass(msg = "Database password: ")
   }
-  if (dbms == "postgres" && is.null(config$port)) config$port <- 5432L
-  if (dbms == "sql server" && is.null(config$driver)) {
-    config$driver <- "ODBC Driver 18 for SQL Server"
+  defaults <- dbmsConfig[[dbms]]$defaults
+  for (nm in names(defaults)) {
+    if (is.null(config[[nm]])) config[[nm]] <- defaults[[nm]]
   }
   config
 }
@@ -125,7 +124,7 @@ databaseSchemaConfig <- function(dbms, cdmSchema, resultsSchema, achillesSchema,
   for (i in seq_along(catalogs)) {
     if (!is.character(catalogs[[i]]) || length(catalogs[[i]]) != 1L ||
         is.na(catalogs[[i]]) || !nzchar(catalogs[[i]])) {
-      cli::cli_abort("All catalog arguments must be one non-empty character value for SQL Server.")
+      cli::cli_abort(paste0("`", names(catalogs)[[i]], "` must be one non-empty character value for SQL Server."))
     }
   }
   c(schemas, catalogs)
@@ -143,5 +142,6 @@ validateConfigCredentials <- function(config, call = parent.frame()) {
       call = call
     )
   }
+  CDMConnector::cdmDisconnect(cdm)
   invisible()
 }
